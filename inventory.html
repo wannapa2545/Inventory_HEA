@@ -1,182 +1,457 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <title>Inventory</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f7f9fc;
-        }
-
-        .sidebar {
-            background-color: #e6f0fa;
-            height: 100vh;
-            padding-top: 20px;
-        }
-
-        .sidebar .nav-link.active {
-            background-color: #ccc;
-            font-weight: bold;
-        }
-
-        .status-dot {
-            width: 15px;
-            height: 15px;
-            border-radius: 50%;
-            display: inline-block;
-        }
-
-        .in-stock {
-            background-color: limegreen;
-        }
-
-        .low-stock {
-            background-color: gold;
-        }
-
-        .out-stock {
-            background-color: red;
-        }
-
-        .table-rounded th:last-child {
-            border-top-right-radius: 10px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Inventory</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background-color: #f7f9fc; }
+    .sidebar { background-color: #e6f0fa; height: 100vh; padding-top: 20px; }
+    .sidebar .nav-link.active { background-color: #ccc; font-weight: bold; }
+    .status-dot { width: 15px; height: 15px; border-radius: 50%; display: inline-block; }
+    .in-stock  { background-color: limegreen; }
+    .low-stock { background-color: gold; }
+    .out-stock { background-color: red; }
+    .table-rounded th:last-child { border-top-right-radius: 10px; }
+  </style>
 </head>
-
 <body>
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Sidebar -->
-            <div class="col-md-2 sidebar">
-                <h4 class="text-center fw-bold">WAREHOUSE</h4>
-                <nav class="nav flex-column px-3 mt-4">
-                    <a class="nav-link" href="production.html">Production Plan</a>
-                    <a class="nav-link active" href="inventory.html">Inventory</a>
-                </nav>
-            </div>
-
-            <!-- Main Content -->
-            <div class="col-md-10 p-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h3 class="fw-bold fs-4 mb-0">Inventory</h3>
-                    <input type="text" class="form-control w-25" placeholder="Search item">
-                </div>
-
-                <!-- Summary Cards -->
-                <div class="row mb-4">
-                    <div class="col-md-4">
-                        <div class="bg-light p-3 border rounded">
-                            <strong>Total Stock on hand</strong><br>
-                            <h4 class="mb-0">2,344,444</h4>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="bg-light p-3 border rounded">
-                            <strong>Stock in HEA</strong><br>
-                            <h4 class="mb-0">3,489</h4>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="bg-light p-3 border rounded">
-                            <strong>Stock in DHL</strong><br>
-                            <h4 class="mb-0">9,444</h4>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Status Legend -->
-                <div class="mb-3 fs-6">
-                    <span class="status-dot in-stock"></span> In Stock &nbsp;
-                    <span class="status-dot low-stock"></span> Low Stock &nbsp;
-                    <span class="status-dot out-stock"></span> Out of Stock
-                </div>
-
-                <!-- Table -->
-                <div class="table-responsive">
-                    <table class="table table-bordered text-center align-middle fs-6">
-                        <thead class="table-primary fw-bold table-rounded">
-                            <tr>
-                                <th>No</th>
-                                <th>Part No</th>
-                                <th>Code</th>
-                                <th>Coil/Box</th>
-                                <th>HEA</th>
-                                <th>DHL</th>
-                                <th>Stock on hand</th>
-                                <th>Station</th>
-                            </tr>
-                        </thead>
-                        <tbody id="inventory-body">
-                            <tr>
-                                <td>1</td>
-                                <td>163575859</td>
-                                <td>SDR</td>
-                                <td>60</td>
-                                <td>50</td>
-                                <td>50</td>
-                                <td class="stock">100</td>
-                                <td class="status"></td>
-                            </tr>
-                            <tr>
-                                <td>2</td>
-                                <td>536754748</td>
-                                <td>BF1-S</td>
-                                <td>120</td>
-                                <td>32</td>
-                                <td>78</td>
-                                <td class="stock">100</td>
-                                <td class="status"></td>
-                            </tr>
-                            <tr>
-                                <td>3</td>
-                                <td>536754748</td>
-                                <td>NBx1</td>
-                                <td>76</td>
-                                <td>45</td>
-                                <td>55</td>
-                                <td class="stock">45</td>
-                                <td class="status"></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+<div class="container-fluid">
+  <div class="row">
+    <!-- Sidebar -->
+    <div class="col-md-2 sidebar">
+      <h4 class="text-center fw-bold">WAREHOUSE</h4>
+      <nav class="nav flex-column px-3 mt-4">
+        <a class="nav-link" href="production.html">Production Plan</a>
+        <a class="nav-link active" href="inventory.html">Inventory</a>
+      </nav>
     </div>
 
-    <!-- JS: Auto status -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const rows = document.querySelectorAll('#inventory-body tr');
+    <!-- Main Content -->
+    <div class="col-md-10 p-4">
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <h3 class="fw-bold fs-4 mb-0">Inventory</h3>
+        <div class="d-flex gap-2 align-items-center flex-grow-1" style="max-width:480px">
+          <input id="searchInput" type="text" class="form-control w-100" placeholder="Search item">
+          <button class="btn btn-primary flex-shrink-0" data-bs-toggle="modal" data-bs-target="#addModal">+ Add</button>
+        </div>
+      </div>
 
-            rows.forEach(row => {
-                const stock = parseInt(row.querySelector('.stock').textContent.trim());
-                const statusCell = row.querySelector('.status');
+      <!-- Summary Cards -->
+      <div class="row mb-4">
+        <div class="col-md-4">
+          <div class="bg-light p-3 border rounded">
+            <strong>Total Stock on hand</strong><br>
+            <h4 id="totalStock" class="mb-0">0</h4>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="bg-light p-3 border rounded">
+            <strong>Stock in HEA</strong><br>
+            <h4 id="totalHea" class="mb-0">0</h4>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="bg-light p-3 border rounded">
+            <strong>Stock in DHL</strong><br>
+            <h4 id="totalDhl" class="mb-0">0</h4>
+          </div>
+        </div>
+      </div>
 
-                const dot = document.createElement('span');
-                dot.classList.add('status-dot');
+      <!-- Status Legend -->
+      <div class="mb-3 fs-6">
+        <span class="status-dot in-stock"></span> In Stock &nbsp;
+        <span class="status-dot low-stock"></span> Low Stock &nbsp;
+        <span class="status-dot out-stock"></span> Out of Stock
+      </div>
 
-                if (stock > 50) {
-                    dot.classList.add('in-stock');
-                    dot.title = "In Stock";
-                } else if (stock > 0) {
-                    dot.classList.add('low-stock');
-                    dot.title = "Low Stock";
-                } else {
-                    dot.classList.add('out-stock');
-                    dot.title = "Out of Stock";
-                }
+      <!-- Inventory Table -->
+      <div class="table-responsive">
+        <table class="table table-bordered text-center align-middle fs-6" id="inventory-table">
+          <thead class="table-primary fw-bold table-rounded">
+          <tr>
+            <th>No</th>
+            <th>Part No</th>
+            <th>Code</th>
+            <th>Coil/Box</th>
+            <th>HEA</th>
+            <th>DHL</th>
+            <th>Stock</th>
+            <th>Station</th>
+            <th>Actions</th>
+          </tr>
+          </thead>
+          <tbody id="inventory-body"></tbody>
+        </table>
+      </div>
 
-                statusCell.appendChild(dot);
-            });
-        });
-    </script>
+      <!-- Transfer History -->
+      <!--
+      <table class="table table-bordered mt-4" id="history-table">
+        <thead class="table-secondary fw-bold">
+          <tr>
+            <th>Timestamp</th>
+            <th>Part No</th>
+            <th>Code</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Quantity</th>
+            <th>HEA</th>
+            <th>DHL</th>
+            <th>Stock</th>
+          </tr>
+        </thead>
+        <tbody id="history-body"></tbody>
+      </table>
+      -->
+    </div>
+  </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Add Item Modal -->
+<div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addModalLabel">Add Inventory Item</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="add-form">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="partNo" class="form-label">Part No</label>
+            <input type="text" id="partNo" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label for="code" class="form-label">Code</label>
+            <input type="text" id="code" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label for="coilBox" class="form-label">Coil/Box</label>
+            <input type="number" id="coilBox" class="form-control" min="0" required>
+          </div>
+          <div class="mb-3">
+            <label for="hea" class="form-label">HEA</label>
+            <input type="number" id="hea" class="form-control" min="0" required>
+          </div>
+          <div class="mb-3">
+            <label for="dhl" class="form-label">DHL</label>
+            <input type="number" id="dhl" class="form-control" min="0" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase + App Logic -->
+<script type="module">
+import { initializeApp }  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAnalytics }   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
+import {
+  getDatabase, ref, push, update,
+  onChildAdded, onChildChanged
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+/* ===== Firebase config ===== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCxAieSpxdtzyRRuesH7zWcSraaTwHjVlI",
+  authDomain: "web-developer-3d7db.firebaseapp.com",
+  databaseURL: "https://web-developer-3d7db-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "web-developer-3d7db",
+  storageBucket: "web-developer-3d7db.appspot.com",
+  messagingSenderId: "675554122600",
+  appId: "1:675554122600:web:cb79eb4cbf3d71088e54dd",
+  measurementId: "G-8YDXS10SQ9"
+};
+const app = initializeApp(firebaseConfig);
+getAnalytics(app);
+const db = getDatabase(app);
+const inventoryRef = ref(db, 'inventory');
+const historyRef   = ref(db, 'transferHistory');   // สำหรับประวัติการโอน
+
+/* ===== DOM refs ===== */
+const inventoryBody = document.getElementById('inventory-body');
+const historyBody   = document.getElementById('history-body');
+const addForm       = document.getElementById('add-form');
+const searchInput   = document.getElementById('searchInput');
+const totalStockEl  = document.getElementById('totalStock');
+const totalHeaEl    = document.getElementById('totalHea');
+const totalDhlEl    = document.getElementById('totalDhl');
+
+/* ===== Helpers ===== */
+function setStatusDot(row){
+  const stock = parseInt(row.querySelector('.stock').textContent);
+  const statusCell = row.querySelector('.status');
+  statusCell.innerHTML='';
+  const dot=document.createElement('span');dot.classList.add('status-dot');
+  if(stock>50){dot.classList.add('in-stock');dot.title='In Stock';}
+  else if(stock>0){dot.classList.add('low-stock');dot.title='Low Stock';}
+  else {dot.classList.add('out-stock');dot.title='Out of Stock';}
+  statusCell.appendChild(dot);
+}
+
+function updateSummaryCards(){
+  let totalStock=0,totalHea=0,totalDhl=0;
+  inventoryBody.querySelectorAll('tr').forEach(tr=>{
+    totalStock+=parseInt(tr.querySelector('.stock').textContent);
+    totalHea  +=parseInt(tr.children[4].textContent);
+    totalDhl  +=parseInt(tr.children[5].textContent);
+  });
+  totalStockEl.textContent=totalStock.toLocaleString();
+  totalHeaEl.textContent  =totalHea.toLocaleString();
+  totalDhlEl.textContent  =totalDhl.toLocaleString();
+}
+
+/* ===== บันทึกประวัติการโอน พร้อมค่าคงเหลือ ===== */
+function logTransfer({ partNo, code, from, to, qty, timestamp, currentHea, currentDhl, currentStock }){
+  if(!timestamp) timestamp = new Date().toISOString();
+  push(historyRef, { 
+    partNo, code, from, to, qty, timestamp,
+    currentHea, currentDhl, currentStock
+  }).catch(err=>console.error('Log failed:', err));
+}
+
+/* ===== Row creation & action buttons ===== */
+function attachActionHandlers(row,key){
+  const heaCell = row.children[4];
+  const dhlCell = row.children[5];
+  const btnDhlToHea = row.querySelector('.btn-dhl-to-hea');
+  const btnHeaToDhl = row.querySelector('.btn-hea-to-dhl');
+  const btnInToDhl  = row.querySelector('.btn-in-to-dhl');
+  const btnHeaToOut = row.querySelector('.btn-hea-to-out');
+
+  btnDhlToHea.onclick = () => {
+    const qty = prompt('Quantity to move DHL → HEA', '0');
+    if(!qty || isNaN(qty) || qty<=0) return alert('Invalid quantity');
+    if(parseInt(dhlCell.textContent) < qty) return alert('Not enough DHL stock');
+    transfer(key, 'DHL', 'HEA', qty, heaCell, dhlCell, row);
+  };
+
+  btnHeaToDhl.onclick = () => {
+    const qty = prompt('Quantity to move HEA → DHL', '0');
+    if(!qty || isNaN(qty) || qty<=0) return alert('Invalid quantity');
+    if(parseInt(heaCell.textContent) < qty) return alert('Not enough HEA stock');
+    transfer(key, 'HEA', 'DHL', qty, heaCell, dhlCell, row);
+  };
+
+  btnInToDhl.onclick = () => {
+    const qty = prompt('Quantity to move IN → DHL', '0');
+    if(!qty || isNaN(qty) || qty<=0) return alert('Invalid quantity');
+    // IN stock = coilBox - (hea + dhl)
+    const coilBox = parseInt(row.children[3].textContent);
+    const currentHea = parseInt(heaCell.textContent);
+    const currentDhl = parseInt(dhlCell.textContent);
+    const inStock = coilBox - (currentHea + currentDhl);
+    //if(inStock < qty) return alert('Not enough IN stock');
+    // เพิ่ม DHL เท่านั้น stock จะเพิ่ม
+    const newDhl = currentDhl + Number(qty);
+    const newStock = currentHea + newDhl;
+    update(ref(db,'inventory/'+key), {
+      dhl: newDhl,
+      stock: newStock
+    }).then(()=>{
+      dhlCell.textContent = newDhl;
+      row.querySelector('.stock').textContent = newStock;
+      setStatusDot(row);
+      updateSummaryCards();
+      logTransfer({
+        partNo: row.children[1].textContent,
+        code: row.children[2].textContent,
+        from: 'IN',
+        to: 'DHL',
+        qty: Number(qty),
+        currentHea,
+        currentDhl: newDhl,
+        currentStock: newStock
+      });
+    }).catch(err=>alert(err.message));
+  };
+
+  btnHeaToOut.onclick = () => {
+    const qty = prompt('Quantity to remove HEA → OUT', '0');
+    if(!qty || isNaN(qty) || qty<=0) return alert('Invalid quantity');
+    const currentHea = parseInt(heaCell.textContent);
+    const currentDhl = parseInt(dhlCell.textContent);
+    if(currentHea < qty) return alert('Not enough HEA stock');
+    const newHea = currentHea - Number(qty);
+    const newStock = newHea + currentDhl;
+    update(ref(db,'inventory/'+key), {
+      hea: newHea,
+      stock: newStock
+    }).then(()=>{
+      heaCell.textContent = newHea;
+      row.querySelector('.stock').textContent = newStock;
+      setStatusDot(row);
+      updateSummaryCards();
+      logTransfer({
+        partNo: row.children[1].textContent,
+        code: row.children[2].textContent,
+        from: 'HEA',
+        to: 'OUT',
+        qty: Number(qty),
+        currentHea: newHea,
+        currentDhl,
+        currentStock: newStock
+      });
+    }).catch(err=>alert(err.message));
+  };
+}
+
+/* ===== ฟังก์ชันการโอน stock ระหว่าง HEA กับ DHL ===== */
+function transfer(key, from, to, qty, heaCell, dhlCell, row){
+  qty = Number(qty);
+  let currentHea = parseInt(heaCell.textContent);
+  let currentDhl = parseInt(dhlCell.textContent);
+  let newHea = currentHea;
+  let newDhl = currentDhl;
+
+  if(from==='DHL' && to==='HEA'){
+    if(currentDhl < qty) return alert('Not enough DHL stock');
+    newDhl -= qty;
+    newHea += qty;
+  } else if(from==='HEA' && to==='DHL'){
+    if(currentHea < qty) return alert('Not enough HEA stock');
+    newHea -= qty;
+    newDhl += qty;
+  } else {
+    return alert('Invalid transfer');
+  }
+
+  const newStock = newHea + newDhl;
+
+  update(ref(db,'inventory/'+key), {
+    hea: newHea,
+    dhl: newDhl,
+    stock: newStock
+  }).then(() => {
+    heaCell.textContent = newHea;
+    dhlCell.textContent = newDhl;
+    row.querySelector('.stock').textContent = newStock;
+    setStatusDot(row);
+    updateSummaryCards();
+
+    logTransfer({
+      partNo: row.children[1].textContent,
+      code: row.children[2].textContent,
+      from, to, qty,
+      currentHea: newHea,
+      currentDhl: newDhl,
+      currentStock: newStock
+    });
+  }).catch(err => alert(err.message));
+}
+
+/* ===== Render single inventory row ===== */
+function renderRow(key, data, index){
+  const tr = document.createElement('tr');
+  tr.dataset.key = key;
+
+  tr.innerHTML = `
+    <td>${index}</td>
+    <td>${data.partNo}</td>
+    <td>${data.code}</td>
+    <td>${data.coilBox}</td>
+    <td>${data.hea}</td>
+    <td>${data.dhl}</td>
+    <td class="stock">${data.stock}</td>
+    <td class="status"></td>
+    <td>
+      <button class="btn btn-sm btn-warning btn-hea-to-dhl">HEA → DHL</button>
+      <button class="btn btn-sm btn-success btn-dhl-to-hea">DHL → HEA</button>
+      <button class="btn btn-sm btn-primary btn-in-to-dhl">IN → DHL</button>
+      <button class="btn btn-sm btn-danger btn-hea-to-out">HEA → OUT</button>
+    </td>`;
+
+  setStatusDot(tr);
+  attachActionHandlers(tr,key);
+
+  return tr;
+}
+
+/* ===== Load inventory ===== */
+let inventoryData = {};
+onChildAdded(inventoryRef, snapshot => {
+  const key = snapshot.key;
+  const data = snapshot.val();
+  inventoryData[key] = data;
+
+  const row = renderRow(key, data, inventoryBody.children.length+1);
+  inventoryBody.appendChild(row);
+  updateSummaryCards();
+});
+
+onChildChanged(inventoryRef, snapshot => {
+  const key = snapshot.key;
+  const data = snapshot.val();
+  inventoryData[key] = data;
+
+  const row = inventoryBody.querySelector(`tr[data-key="${key}"]`);
+  if(row){
+    row.children[1].textContent = data.partNo;
+    row.children[2].textContent = data.code;
+    row.children[3].textContent = data.coilBox;
+    row.children[4].textContent = data.hea;
+    row.children[5].textContent = data.dhl;
+    row.querySelector('.stock').textContent = data.stock;
+    setStatusDot(row);
+    updateSummaryCards();
+  }
+});
+
+/* ===== Load history ===== */
+onChildAdded(historyRef, snapshot => {
+  const d = snapshot.val();
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>${new Date(d.timestamp).toLocaleString()}</td>
+    <td>${d.partNo}</td>
+    <td>${d.code}</td>
+    <td>${d.from}</td>
+    <td>${d.to}</td>
+    <td>${d.qty}</td>
+    <td>${d.currentHea}</td>
+    <td>${d.currentDhl}</td>
+    <td>${d.currentStock}</td>`;
+  historyBody.prepend(tr);
+});
+
+/* ===== Search filter ===== */
+searchInput.addEventListener('input', e => {
+  const term = e.target.value.toLowerCase();
+  inventoryBody.querySelectorAll('tr').forEach(tr=>{
+    const partNo = tr.children[1].textContent.toLowerCase();
+    const code = tr.children[2].textContent.toLowerCase();
+    tr.style.display = (partNo.includes(term) || code.includes(term)) ? '' : 'none';
+  });
+});
+
+/* ===== Add new inventory item ===== */
+addForm.addEventListener('submit', e => {
+  e.preventDefault();
+  const newItem = {
+    partNo: addForm.partNo.value.trim(),
+    code: addForm.code.value.trim(),
+    coilBox: Number(addForm.coilBox.value),
+    hea: Number(addForm.hea.value),
+    dhl: Number(addForm.dhl.value)
+  };
+  newItem.stock = newItem.hea + newItem.dhl;
+
+  push(inventoryRef, newItem).then(() => {
+    addForm.reset();
+    const modal = bootstrap.Modal.getInstance(document.getElementById('addModal'));
+    modal.hide();
+  }).catch(err => alert(err.message));
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>
