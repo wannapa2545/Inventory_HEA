@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Production Plan</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f7f9fc;
+        }
+
+        .sidebar {
+            background-color: #e6f0fa;
+            height: 100vh;
+            padding-top: 20px;
+        }
+
+        .sidebar .nav-link.active {
+            background-color: #ccc;
+            font-weight: bold;
+        }
+
+        .status-dot {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .in-stock {
+            background-color: limegreen;
+        }
+
+        .low-stock {
+            background-color: gold;
+        }
+
+        .out-stock {
+            background-color: red;
+        }
+
+        .table-rounded th:last-child {
+            border-top-right-radius: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-2 sidebar">
+                <h4 class="text-center fw-bold">WAREHOUSE</h4>
+                <nav class="nav flex-column px-3 mt-4">
+                    <a class="nav-link active" href="production.html">Production Plan</a>
+                    <a class="nav-link" href="inventory.html">Inventory</a>
+                </nav>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-10 p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="fw-bold fs-4 mb-0">Production Plan</h3>
+                    <input type="text" class="form-control w-25" placeholder="Search item">
+                </div>
+
+                <!-- Status Legend -->
+                <div class="mb-3 fs-6">
+                    <span class="status-dot in-stock"></span> In Stock &nbsp;
+                    <span class="status-dot low-stock"></span> Low Stock &nbsp;
+                    <span class="status-dot out-stock"></span> Out of Stock
+                </div>
+
+                <!-- Table -->
+                <div class="table-responsive">
+                    <table class="table table-bordered text-center align-middle fs-6">
+                        <thead class="table-secondary fw-bold table-rounded">
+                            <tr>
+                                <th>No</th>
+                                <th>Part No</th>
+                                <th>Code</th>
+                                <th>Coil/Box</th>
+                                <th>Stock on hand</th>
+                                <th>HEA</th>
+                                <th>DHL</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="production-body">
+                            <tr>
+                                <td>1</td>
+                                <td>163575859</td>
+                                <td>SDR</td>
+                                <td>60</td>
+                                <td class="stock">100</td>
+                                <td>50</td>
+                                <td>50</td>
+                                <td>2025-06-26</td>
+                                <td class="status"></td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>536754748</td>
+                                <td>BF1-S</td>
+                                <td>120</td>
+                                <td class="stock">30</td>
+                                <td>32</td>
+                                <td>78</td>
+                                <td>2025-06-27</td>
+                                <td class="status"></td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>536754748</td>
+                                <td>NBx1</td>
+                                <td>76</td>
+                                <td class="stock">0</td>
+                                <td>45</td>
+                                <td>55</td>
+                                <td>2025-06-28</td>
+                                <td class="status"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JS: Auto status -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const rows = document.querySelectorAll('#production-body tr');
+
+            rows.forEach(row => {
+                const stock = parseInt(row.querySelector('.stock').textContent.trim());
+                const statusCell = row.querySelector('.status');
+
+                const dot = document.createElement('span');
+                dot.classList.add('status-dot');
+
+                if (stock > 50) {
+                    dot.classList.add('in-stock');
+                    dot.title = "In Stock";
+                } else if (stock > 0) {
+                    dot.classList.add('low-stock');
+                    dot.title = "Low Stock";
+                } else {
+                    dot.classList.add('out-stock');
+                    dot.title = "Out of Stock";
+                }
+
+                statusCell.appendChild(dot);
+            });
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
