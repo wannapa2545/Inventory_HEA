@@ -219,6 +219,50 @@ function logTransfer({ partNo, code, from, to, qty, timestamp, currentHea, curre
   }).catch(err=>console.error('Log failed:', err));
 }
 
+/* ===== ฟังก์ชันการโอน stock ระหว่าง HEA กับ DHL ===== */
+function transfer(key, from, to, qty, heaCell, dhlCell, row){
+  qty = Number(qty);
+  let currentHea = parseInt(heaCell.textContent);
+  let currentDhl = parseInt(dhlCell.textContent);
+  let newHea = currentHea;
+  let newDhl = currentDhl;
+
+  if(from==='DHL' && to==='HEA'){
+    if(currentDhl < qty) return alert('Not enough DHL stock');
+    newDhl -= qty;
+    newHea += qty;
+  } else if(from==='HEA' && to==='DHL'){
+    if(currentHea < qty) return alert('Not enough HEA stock');
+    newHea -= qty;
+    newDhl += qty;
+  } else {
+    return alert('Invalid transfer');
+  }
+
+  const newStock = newHea + newDhl;
+
+  update(ref(db,'inventory/'+key), {
+    hea: newHea,
+    dhl: newDhl,
+    stock: newStock
+  }).then(() => {
+    heaCell.textContent = newHea;
+    dhlCell.textContent = newDhl;
+    row.querySelector('.stock').textContent = newStock;
+    setStatusDot(row);
+    updateSummaryCards();
+
+    logTransfer({
+      partNo: row.children[1].textContent,
+      code: row.children[2].textContent,
+      from, to, qty,
+      currentHea: newHea,
+      currentDhl: newDhl,
+      currentStock: newStock
+    });
+  }).catch(err => alert(err.message));
+}
+
 /* ===== Row creation & action buttons ===== */
 function attachActionHandlers(row,key){
   const heaCell = row.children[4];
@@ -227,6 +271,7 @@ function attachActionHandlers(row,key){
   const btnHeaToDhl = row.querySelector('.btn-hea-to-dhl');
   const btnInToDhl  = row.querySelector('.btn-in-to-dhl');
   const btnHeaToOut = row.querySelector('.btn-hea-to-out');
+  const btnMhToHea  = row.querySelector('.btn-mh-to-hea'); // NEW BUTTON
 
   btnDhlToHea.onclick = () => {
     const qty = prompt('Quantity to move DHL → HEA', '0');
@@ -250,7 +295,6 @@ function attachActionHandlers(row,key){
     const currentHea = parseInt(heaCell.textContent);
     const currentDhl = parseInt(dhlCell.textContent);
     const inStock = coilBox - (currentHea + currentDhl);
-    //if(inStock < qty) return alert('Not enough IN stock');
     // เพิ่ม DHL เท่านั้น stock จะเพิ่ม
     const newDhl = currentDhl + Number(qty);
     const newStock = currentHea + newDhl;
@@ -303,50 +347,36 @@ function attachActionHandlers(row,key){
       });
     }).catch(err=>alert(err.message));
   };
-}
 
-/* ===== ฟังก์ชันการโอน stock ระหว่าง HEA กับ DHL ===== */
-function transfer(key, from, to, qty, heaCell, dhlCell, row){
-  qty = Number(qty);
-  let currentHea = parseInt(heaCell.textContent);
-  let currentDhl = parseInt(dhlCell.textContent);
-  let newHea = currentHea;
-  let newDhl = currentDhl;
+  // ===== NEW FUNCTION: MH → HEA =====
+  btnMhToHea.onclick = () => {
+    const qty = prompt('Quantity to add MH → HEA', '0');
+    if(!qty || isNaN(qty) || qty<=0) return alert('Invalid quantity');
+    const currentHea = parseInt(heaCell.textContent);
+    const currentDhl = parseInt(dhlCell.textContent);
+    const newHea = currentHea + Number(qty);
+    const newStock = newHea + currentDhl;
 
-  if(from==='DHL' && to==='HEA'){
-    if(currentDhl < qty) return alert('Not enough DHL stock');
-    newDhl -= qty;
-    newHea += qty;
-  } else if(from==='HEA' && to==='DHL'){
-    if(currentHea < qty) return alert('Not enough HEA stock');
-    newHea -= qty;
-    newDhl += qty;
-  } else {
-    return alert('Invalid transfer');
-  }
-
-  const newStock = newHea + newDhl;
-
-  update(ref(db,'inventory/'+key), {
-    hea: newHea,
-    dhl: newDhl,
-    stock: newStock
-  }).then(() => {
-    heaCell.textContent = newHea;
-    dhlCell.textContent = newDhl;
-    row.querySelector('.stock').textContent = newStock;
-    setStatusDot(row);
-    updateSummaryCards();
-
-    logTransfer({
-      partNo: row.children[1].textContent,
-      code: row.children[2].textContent,
-      from, to, qty,
-      currentHea: newHea,
-      currentDhl: newDhl,
-      currentStock: newStock
-    });
-  }).catch(err => alert(err.message));
+    update(ref(db,'inventory/'+key), {
+      hea: newHea,
+      stock: newStock
+    }).then(()=>{
+      heaCell.textContent = newHea;
+      row.querySelector('.stock').textContent = newStock;
+      setStatusDot(row);
+      updateSummaryCards();
+      logTransfer({
+        partNo: row.children[1].textContent,
+        code: row.children[2].textContent,
+        from: 'MH',
+        to: 'HEA',
+        qty: Number(qty),
+        currentHea: newHea,
+        currentDhl,
+        currentStock: newStock
+      });
+    }).catch(err=>alert(err.message));
+  };
 }
 
 /* ===== Render single inventory row ===== */
@@ -366,8 +396,9 @@ function renderRow(key, data, index){
     <td>
       <button class="btn btn-sm btn-warning btn-hea-to-dhl">HEA → DHL</button>
       <button class="btn btn-sm btn-success btn-dhl-to-hea">DHL → HEA</button>
-      <button class="btn btn-sm btn-primary btn-in-to-dhl">IN → DHL</button>
+      <button class="btn btn-sm btn-primary btn-mh-to-hea">MH → HEA</button>
       <button class="btn btn-sm btn-danger btn-hea-to-out">HEA → OUT</button>
+      <button class="btn btn-sm btn-primary btn-in-to-dhl" style="opacity:0;">IN → DHL</button>
     </td>`;
 
   setStatusDot(tr);
