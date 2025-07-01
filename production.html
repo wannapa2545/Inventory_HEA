@@ -106,8 +106,8 @@ function setStatusDot(row){
   const statusCell = row.querySelector('.status');
   statusCell.innerHTML='';
   const dot=document.createElement('span');dot.classList.add('status-dot');
-  if(stock>50){dot.classList.add('in-stock');dot.title='In Stock';}
-  else if(stock>0){dot.classList.add('low-stock');dot.title='Low Stock';}
+  if(stock>100){dot.classList.add('in-stock');dot.title='In Stock';}
+  else if(stock>50){dot.classList.add('low-stock');dot.title='Low Stock';}
   else {dot.classList.add('out-stock');dot.title='Out of Stock';}
   statusCell.appendChild(dot);
 }
