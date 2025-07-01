@@ -153,11 +153,11 @@
 
 <!-- Firebase + App Logic -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
+import { initializeApp }  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAnalytics }   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
 import {
   getDatabase, ref, push, update,
-  onChildAdded, onChildChanged, remove
+  onChildAdded, onChildChanged
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 /* ===== Firebase config ===== */
@@ -175,51 +175,186 @@ const app = initializeApp(firebaseConfig);
 getAnalytics(app);
 const db = getDatabase(app);
 const inventoryRef = ref(db, 'inventory');
-const historyRef = ref(db, 'transferHistory');
+const historyRef   = ref(db, 'transferHistory');   // สำหรับประวัติการโอน
 
 /* ===== DOM refs ===== */
 const inventoryBody = document.getElementById('inventory-body');
-const addForm = document.getElementById('add-form');
-const totalStockEl = document.getElementById('totalStock');
-const totalHeaEl = document.getElementById('totalHea');
-const totalDhlEl = document.getElementById('totalDhl');
+const historyBody   = document.getElementById('history-body');
+const addForm       = document.getElementById('add-form');
+const searchInput   = document.getElementById('searchInput');
+const totalStockEl  = document.getElementById('totalStock');
+const totalHeaEl    = document.getElementById('totalHea');
+const totalDhlEl    = document.getElementById('totalDhl');
 
 /* ===== Helpers ===== */
-function setStatusDot(row) {
+function setStatusDot(row){
   const stock = parseInt(row.querySelector('.stock').textContent);
   const statusCell = row.querySelector('.status');
-  statusCell.innerHTML = '';
-  const dot = document.createElement('span');
-  dot.classList.add('status-dot');
-  if (stock > 50) {
-    dot.classList.add('in-stock');
-    dot.title = 'In Stock';
-  } else if (stock > 0) {
-    dot.classList.add('low-stock');
-    dot.title = 'Low Stock';
-  } else {
-    dot.classList.add('out-stock');
-    dot.title = 'Out of Stock';
-  }
+  statusCell.innerHTML='';
+  const dot=document.createElement('span');dot.classList.add('status-dot');
+  if(stock>50){dot.classList.add('in-stock');dot.title='In Stock';}
+  else if(stock>0){dot.classList.add('low-stock');dot.title='Low Stock';}
+  else {dot.classList.add('out-stock');dot.title='Out of Stock';}
   statusCell.appendChild(dot);
 }
 
-function updateSummaryCards() {
-  let totalStock = 0, totalHea = 0, totalDhl = 0;
-  inventoryBody.querySelectorAll('tr').forEach(tr => {
-    totalStock += parseInt(tr.querySelector('.stock').textContent);
-    totalHea += parseInt(tr.children[4].textContent);
-    totalDhl += parseInt(tr.children[5].textContent);
+function updateSummaryCards(){
+  let totalStock=0,totalHea=0,totalDhl=0;
+  inventoryBody.querySelectorAll('tr').forEach(tr=>{
+    totalStock+=parseInt(tr.querySelector('.stock').textContent);
+    totalHea  +=parseInt(tr.children[4].textContent);
+    totalDhl  +=parseInt(tr.children[5].textContent);
   });
-  totalStockEl.textContent = totalStock.toLocaleString();
-  totalHeaEl.textContent = totalHea.toLocaleString();
-  totalDhlEl.textContent = totalDhl.toLocaleString();
+  totalStockEl.textContent=totalStock.toLocaleString();
+  totalHeaEl.textContent  =totalHea.toLocaleString();
+  totalDhlEl.textContent  =totalDhl.toLocaleString();
 }
 
-function renderRow(key, data, index) {
+/* ===== บันทึกประวัติการโอน พร้อมค่าคงเหลือ ===== */
+function logTransfer({ partNo, code, from, to, qty, timestamp, currentHea, currentDhl, currentStock }){
+  if(!timestamp) timestamp = new Date().toISOString();
+  push(historyRef, { 
+    partNo, code, from, to, qty, timestamp,
+    currentHea, currentDhl, currentStock
+  }).catch(err=>console.error('Log failed:', err));
+}
+
+/* ===== Row creation & action buttons ===== */
+function attachActionHandlers(row,key){
+  const heaCell = row.children[4];
+  const dhlCell = row.children[5];
+  const btnDhlToHea = row.querySelector('.btn-dhl-to-hea');
+  const btnHeaToDhl = row.querySelector('.btn-hea-to-dhl');
+  const btnInToDhl  = row.querySelector('.btn-in-to-dhl');
+  const btnHeaToOut = row.querySelector('.btn-hea-to-out');
+
+  btnDhlToHea.onclick = () => {
+    const qty = prompt('Quantity to move DHL → HEA', '0');
+    if(!qty || isNaN(qty) || qty<=0) return alert('Invalid quantity');
+    if(parseInt(dhlCell.textContent) < qty) return alert('Not enough DHL stock');
+    transfer(key, 'DHL', 'HEA', qty, heaCell, dhlCell, row);
+  };
+
+  btnHeaToDhl.onclick = () => {
+    const qty = prompt('Quantity to move HEA → DHL', '0');
+    if(!qty || isNaN(qty) || qty<=0) return alert('Invalid quantity');
+    if(parseInt(heaCell.textContent) < qty) return alert('Not enough HEA stock');
+    transfer(key, 'HEA', 'DHL', qty, heaCell, dhlCell, row);
+  };
+
+  btnInToDhl.onclick = () => {
+    const qty = prompt('Quantity to move IN → DHL', '0');
+    if(!qty || isNaN(qty) || qty<=0) return alert('Invalid quantity');
+    // IN stock = coilBox - (hea + dhl)
+    const coilBox = parseInt(row.children[3].textContent);
+    const currentHea = parseInt(heaCell.textContent);
+    const currentDhl = parseInt(dhlCell.textContent);
+    const inStock = coilBox - (currentHea + currentDhl);
+    //if(inStock < qty) return alert('Not enough IN stock');
+    // เพิ่ม DHL เท่านั้น stock จะเพิ่ม
+    const newDhl = currentDhl + Number(qty);
+    const newStock = currentHea + newDhl;
+    update(ref(db,'inventory/'+key), {
+      dhl: newDhl,
+      stock: newStock
+    }).then(()=>{
+      dhlCell.textContent = newDhl;
+      row.querySelector('.stock').textContent = newStock;
+      setStatusDot(row);
+      updateSummaryCards();
+      logTransfer({
+        partNo: row.children[1].textContent,
+        code: row.children[2].textContent,
+        from: 'IN',
+        to: 'DHL',
+        qty: Number(qty),
+        currentHea,
+        currentDhl: newDhl,
+        currentStock: newStock
+      });
+    }).catch(err=>alert(err.message));
+  };
+
+  btnHeaToOut.onclick = () => {
+    const qty = prompt('Quantity to remove HEA → OUT', '0');
+    if(!qty || isNaN(qty) || qty<=0) return alert('Invalid quantity');
+    const currentHea = parseInt(heaCell.textContent);
+    const currentDhl = parseInt(dhlCell.textContent);
+    if(currentHea < qty) return alert('Not enough HEA stock');
+    const newHea = currentHea - Number(qty);
+    const newStock = newHea + currentDhl;
+    update(ref(db,'inventory/'+key), {
+      hea: newHea,
+      stock: newStock
+    }).then(()=>{
+      heaCell.textContent = newHea;
+      row.querySelector('.stock').textContent = newStock;
+      setStatusDot(row);
+      updateSummaryCards();
+      logTransfer({
+        partNo: row.children[1].textContent,
+        code: row.children[2].textContent,
+        from: 'HEA',
+        to: 'OUT',
+        qty: Number(qty),
+        currentHea: newHea,
+        currentDhl,
+        currentStock: newStock
+      });
+    }).catch(err=>alert(err.message));
+  };
+}
+
+/* ===== ฟังก์ชันการโอน stock ระหว่าง HEA กับ DHL ===== */
+function transfer(key, from, to, qty, heaCell, dhlCell, row){
+  qty = Number(qty);
+  let currentHea = parseInt(heaCell.textContent);
+  let currentDhl = parseInt(dhlCell.textContent);
+  let newHea = currentHea;
+  let newDhl = currentDhl;
+
+  if(from==='DHL' && to==='HEA'){
+    if(currentDhl < qty) return alert('Not enough DHL stock');
+    newDhl -= qty;
+    newHea += qty;
+  } else if(from==='HEA' && to==='DHL'){
+    if(currentHea < qty) return alert('Not enough HEA stock');
+    newHea -= qty;
+    newDhl += qty;
+  } else {
+    return alert('Invalid transfer');
+  }
+
+  const newStock = newHea + newDhl;
+
+  update(ref(db,'inventory/'+key), {
+    hea: newHea,
+    dhl: newDhl,
+    stock: newStock
+  }).then(() => {
+    heaCell.textContent = newHea;
+    dhlCell.textContent = newDhl;
+    row.querySelector('.stock').textContent = newStock;
+    setStatusDot(row);
+    updateSummaryCards();
+
+    logTransfer({
+      partNo: row.children[1].textContent,
+      code: row.children[2].textContent,
+      from, to, qty,
+      currentHea: newHea,
+      currentDhl: newDhl,
+      currentStock: newStock
+    });
+  }).catch(err => alert(err.message));
+}
+
+/* ===== Render single inventory row ===== */
+function renderRow(key, data, index){
   const tr = document.createElement('tr');
   tr.dataset.key = key;
-  tr.innerHTML = `
+
+  tr.innerHTML = 
     <td>${index}</td>
     <td>${data.partNo}</td>
     <td>${data.code}</td>
@@ -228,17 +363,27 @@ function renderRow(key, data, index) {
     <td>${data.dhl}</td>
     <td class="stock">${data.stock}</td>
     <td class="status"></td>
-    <td>Actions</td>
-  `;
+    <td>
+      <button class="btn btn-sm btn-warning btn-hea-to-dhl">HEA → DHL</button>
+      <button class="btn btn-sm btn-success btn-dhl-to-hea">DHL → HEA</button>
+      <button class="btn btn-sm btn-primary btn-in-to-dhl">IN → DHL</button>
+      <button class="btn btn-sm btn-danger btn-hea-to-out">HEA → OUT</button>
+    </td>;
+
   setStatusDot(tr);
+  attachActionHandlers(tr,key);
+
   return tr;
 }
 
 /* ===== Load inventory ===== */
+let inventoryData = {};
 onChildAdded(inventoryRef, snapshot => {
   const key = snapshot.key;
   const data = snapshot.val();
-  const row = renderRow(key, data, inventoryBody.children.length + 1);
+  inventoryData[key] = data;
+
+  const row = renderRow(key, data, inventoryBody.children.length+1);
   inventoryBody.appendChild(row);
   updateSummaryCards();
 });
@@ -246,8 +391,10 @@ onChildAdded(inventoryRef, snapshot => {
 onChildChanged(inventoryRef, snapshot => {
   const key = snapshot.key;
   const data = snapshot.val();
-  const row = inventoryBody.querySelector(`tr[data-key="${key}"]`);
-  if (row) {
+  inventoryData[key] = data;
+
+  const row = inventoryBody.querySelector(tr[data-key="${key}"]);
+  if(row){
     row.children[1].textContent = data.partNo;
     row.children[2].textContent = data.code;
     row.children[3].textContent = data.coilBox;
@@ -257,6 +404,33 @@ onChildChanged(inventoryRef, snapshot => {
     setStatusDot(row);
     updateSummaryCards();
   }
+});
+
+/* ===== Load history ===== */
+onChildAdded(historyRef, snapshot => {
+  const d = snapshot.val();
+  const tr = document.createElement('tr');
+  tr.innerHTML = 
+    <td>${new Date(d.timestamp).toLocaleString()}</td>
+    <td>${d.partNo}</td>
+    <td>${d.code}</td>
+    <td>${d.from}</td>
+    <td>${d.to}</td>
+    <td>${d.qty}</td>
+    <td>${d.currentHea}</td>
+    <td>${d.currentDhl}</td>
+    <td>${d.currentStock}</td>;
+  historyBody.prepend(tr);
+});
+
+/* ===== Search filter ===== */
+searchInput.addEventListener('input', e => {
+  const term = e.target.value.toLowerCase();
+  inventoryBody.querySelectorAll('tr').forEach(tr=>{
+    const partNo = tr.children[1].textContent.toLowerCase();
+    const code = tr.children[2].textContent.toLowerCase();
+    tr.style.display = (partNo.includes(term) || code.includes(term)) ? '' : 'none';
+  });
 });
 
 /* ===== Add new inventory item ===== */
@@ -271,18 +445,15 @@ addForm.addEventListener('submit', e => {
   };
   newItem.stock = newItem.hea + newItem.dhl;
 
-  push(inventoryRef, newItem).then((ref) => {
-    console.log("✅ Added key:", ref.key); // ✅ log ตรงนี้
+  push(inventoryRef, newItem).then(() => {
     addForm.reset();
     const modal = bootstrap.Modal.getInstance(document.getElementById('addModal'));
     modal.hide();
-  }).catch(err => {
-    console.error("❌ Error pushing to Firebase:", err);
-    alert(err.message);
-  });
+  }).catch(err => alert(err.message));
 });
-
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
+
