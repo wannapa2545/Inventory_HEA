@@ -276,7 +276,7 @@ function attachActionHandlers(row,key){
   };
 
   btnHeaToOut.onclick = () => {
-    const qty = prompt('Quantity to remove HEA → OUT', '0');
+    const qty = prompt('Quantity to remove HEA → ORDER', '0');
     if(!qty || isNaN(qty) || qty<=0) return alert('Invalid quantity');
     const currentHea = parseInt(heaCell.textContent);
     const currentDhl = parseInt(dhlCell.textContent);
@@ -295,7 +295,7 @@ function attachActionHandlers(row,key){
         partNo: row.children[1].textContent,
         code: row.children[2].textContent,
         from: 'HEA',
-        to: 'OUT',
+        to: 'ORDER',
         qty: Number(qty),
         currentHea: newHea,
         currentDhl,
