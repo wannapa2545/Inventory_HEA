@@ -276,7 +276,7 @@ function attachActionHandlers(row,key){
   };
 
   btnHeaToOut.onclick = () => {
-    const qty = prompt('Quantity to remove HEA → ORDER', '0');
+    const qty = prompt('Quantity to remove HEA → OUT', '0');
     if(!qty || isNaN(qty) || qty<=0) return alert('Invalid quantity');
     const currentHea = parseInt(heaCell.textContent);
     const currentDhl = parseInt(dhlCell.textContent);
@@ -295,7 +295,7 @@ function attachActionHandlers(row,key){
         partNo: row.children[1].textContent,
         code: row.children[2].textContent,
         from: 'HEA',
-        to: 'ORDER',
+        to: 'OUT,
         qty: Number(qty),
         currentHea: newHea,
         currentDhl,
@@ -367,7 +367,7 @@ function renderRow(key, data, index){
       <button class="btn btn-sm btn-warning btn-hea-to-dhl">HEA → DHL</button>
       <button class="btn btn-sm btn-success btn-dhl-to-hea">DHL → HEA</button>
       <button class="btn btn-sm btn-primary btn-in-to-dhl">IN → DHL</button>
-      <button class="btn btn-sm btn-danger btn-hea-to-out">HEA → ORDER</button>
+      <button class="btn btn-sm btn-danger btn-hea-to-out">HEA → OUT</button>
     </td>;
 
   setStatusDot(tr);
